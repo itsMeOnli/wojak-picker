@@ -9,9 +9,9 @@
 
 type ExtensionPreferences = {
   /** Supabase URL - Project URL, for example https://your-project.supabase.co */
-  "supabaseUrl": string,
+  "supabaseUrl"?: string,
   /** Supabase Anon Key - Public anon key used by the Raycast extension */
-  "supabaseAnonKey": string,
+  "supabaseAnonKey"?: string,
   /** Supabase Bucket - Storage bucket name for Wojak images */
   "supabaseBucket": string
 }
