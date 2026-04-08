@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "wojak-picker",
   "title": "Wojak Picker",
-  "description": "Search and copy wojak images to your clipboard",
+  "description": "Browse, search, and copy Wojaks straight into any chat from Raycast.",
   "icon": "icon.png",
   "author": "amanmohammed",
   "categories": ["Fun"],
@@ -58,6 +58,7 @@
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
     "migrate:supabase": "node scripts/migrate-to-supabase.js",
+    "publish": "ray publish",
     "scrape": "node scrape/scrape.js"
   }
 }
