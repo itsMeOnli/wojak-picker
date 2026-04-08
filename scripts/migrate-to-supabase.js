@@ -139,13 +139,15 @@ async function main() {
 
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
   const rows = [];
+  const missingLocalFiles = [];
 
   console.log(`Uploading ${manifest.length} local assets to bucket "${config.bucket}"...`);
 
   await runWithConcurrency(manifest, UPLOAD_CONCURRENCY, async (item, index) => {
     const localPath = path.join(process.cwd(), item.localPath);
     if (!fs.existsSync(localPath)) {
-      throw new Error(`Missing local file for ${item.filename}: ${localPath}`);
+      missingLocalFiles.push({ filename: item.filename, localPath });
+      return;
     }
 
     const objectPath = `${item.slug}/${item.filename}`;
@@ -168,10 +170,17 @@ async function main() {
   });
 
   console.log("Upserting metadata rows into public.wojaks...");
-  for (let index = 0; index < rows.length; index += BATCH_SIZE) {
-    const batch = rows.slice(index, index + BATCH_SIZE);
+  const populatedRows = rows.filter(Boolean);
+  for (let index = 0; index < populatedRows.length; index += BATCH_SIZE) {
+    const batch = populatedRows.slice(index, index + BATCH_SIZE);
     await insertRows(config, batch);
-    console.log(`Inserted ${Math.min(index + BATCH_SIZE, rows.length)}/${rows.length} rows`);
+    console.log(`Inserted ${Math.min(index + BATCH_SIZE, populatedRows.length)}/${populatedRows.length} rows`);
+  }
+
+  if (missingLocalFiles.length > 0) {
+    console.log(
+      `Skipped ${missingLocalFiles.length} missing local files: ${missingLocalFiles.map((item) => item.filename).join(", ")}`,
+    );
   }
 
   console.log("Supabase migration complete.");
