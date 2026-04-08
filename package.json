@@ -7,6 +7,31 @@
   "author": "amanmohammed",
   "categories": ["Fun"],
   "license": "MIT",
+  "preferences": [
+    {
+      "name": "supabaseUrl",
+      "type": "textfield",
+      "required": false,
+      "title": "Supabase URL",
+      "description": "Project URL, for example https://your-project.supabase.co",
+      "placeholder": "https://your-project.supabase.co"
+    },
+    {
+      "name": "supabaseAnonKey",
+      "type": "password",
+      "required": false,
+      "title": "Supabase Anon Key",
+      "description": "Public anon key used by the Raycast extension"
+    },
+    {
+      "name": "supabaseBucket",
+      "type": "textfield",
+      "required": false,
+      "title": "Supabase Bucket",
+      "description": "Storage bucket name for Wojak images",
+      "default": "wojaks"
+    }
+  ],
   "commands": [
     {
       "name": "search-wojaks",
@@ -30,6 +55,7 @@
     "dev": "ray develop",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
+    "migrate:supabase": "node scripts/migrate-to-supabase.js",
     "scrape": "node scrape/scrape.js"
   }
 }

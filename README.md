@@ -10,7 +10,7 @@ Search and copy wojak images to your clipboard directly from Raycast.
 npm install
 ```
 
-### 2. Run the scraper
+### 2. Optional: scrape locally
 
 This fetches all wojaks from wojakland.com and builds `assets/wojaks.json`.
 
@@ -19,9 +19,17 @@ node scrape/scrape.js
 ```
 
 Takes ~2-3 minutes (polite 300ms delay between requests). Run this once,
-then re-run whenever you want fresh wojaks.
+then re-run whenever you want fresh wojaks before uploading to Supabase.
 
-### 3. Develop
+### 3. Configure Supabase in Raycast
+
+Open the extension preferences in Raycast and fill in:
+
+- `Supabase URL`
+- `Supabase Anon Key`
+- `Supabase Bucket` (defaults to `wojaks`)
+
+### 4. Develop
 
 ```bash
 npm run dev
@@ -29,41 +37,54 @@ npm run dev
 
 Open Raycast and search for "Search Wojaks".
 
-### 4. Build
+### 5. Build
 
 ```bash
 npm run build
 ```
+
+## Supabase Migration
+
+### 1. Create the table + bucket
+
+Run the SQL in:
+
+```bash
+supabase/migrations/001_create_wojaks.sql
+```
+
+in the Supabase SQL editor.
+
+### 2. Add local migration secrets
+
+Copy `.env.local.example` to `.env.local` and fill in:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_BUCKET`
+
+### 3. Upload images + insert rows
+
+```bash
+npm run migrate:supabase
+```
+
+This uploads your local `assets/wojaks/` library into Supabase Storage and upserts metadata rows into `public.wojaks`.
 
 ---
 
 ## How It Works
 
 ```
-assets/wojaks.json          ← bundled index (names, URLs, categories)
+Supabase table + storage    ← source of truth
         ↓
-Raycast loads JSON into memory
+Raycast fetches metadata on launch
         ↓
-Fuse.js fuzzy search (instant, no network)
+LocalStorage caches metadata for 24h
         ↓
 User selects a wojak
         ↓
-Fetches full PNG from wojakland.com
+Downloads image from Supabase Storage if not already cached
         ↓
 Copies to clipboard as image file
 ```
-
-## Keyboard Shortcuts
-
-| Action                  | Shortcut      |
-| ----------------------- | ------------- |
-| Copy image to clipboard | `Enter`       |
-| Open in browser         | `Cmd+O`       |
-| Copy image URL          | `Cmd+Shift+C` |
-
-## Future Improvements (Phase 2+)
-
-- [ ] Local image cache (`environment.supportPath`) for instant repeat copies
-- [ ] Lazy loading thumbnails
-- [ ] Supabase backend so new wojaks appear without re-bundling
-- [ ] Pinecone semantic search ("find me a sad programmer wojak")
