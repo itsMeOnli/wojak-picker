@@ -1,0 +1,35 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "wojak-picker",
+  "title": "Wojak Picker",
+  "description": "Search and copy wojak images to your clipboard",
+  "icon": "icon.png",
+  "author": "amanmohammed",
+  "categories": ["Fun"],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "search-wojaks",
+      "title": "Search Wojaks",
+      "description": "Search and copy wojak images",
+      "mode": "view"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.68.0",
+    "fuse.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@raycast/utils": "^1.15.0",
+    "@types/node": "^20.11.5",
+    "@types/react": "^18.2.55",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "scrape": "node scrape/scrape.js"
+  }
+}
