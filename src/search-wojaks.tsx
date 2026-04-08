@@ -200,7 +200,7 @@ export default function Command() {
           <Grid.Item
             key={wojak.id}
             id={wojak.id}
-            content={{ source: wojak.thumbUrl }}
+            content={{ source: wojak.assetPath }}
             title={wojak.name}
             subtitle={wojak.category}
             keywords={[wojak.name, wojak.category, wojak.filename]}
