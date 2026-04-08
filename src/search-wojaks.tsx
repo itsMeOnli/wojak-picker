@@ -29,6 +29,10 @@ type Wojak = {
   name: string;
 };
 
+const defaultSupabaseUrl = "https://ernvizpfdljlbkjshggj.supabase.co";
+const defaultSupabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybnZpenBmZGxqbGJranNoZ2dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NjA2NzAsImV4cCI6MjA5MTIzNjY3MH0.zklBHj_lsHVgxPzcKfyYzYrw9aLEPrf8kqnHJWvcuMk";
+
 const allCategoriesLabel = "All Categories";
 const pageSize = 100;
 const searchDebounceMs = 150;
@@ -97,8 +101,8 @@ function getConfiguredPreferences() {
   const preferences = getPreferenceValues<Preferences.SearchWojaks>();
 
   return {
-    supabaseUrl: preferences.supabaseUrl?.trim().replace(/\/$/, "") ?? "",
-    supabaseAnonKey: preferences.supabaseAnonKey?.trim() ?? "",
+    supabaseUrl: preferences.supabaseUrl?.trim().replace(/\/$/, "") || defaultSupabaseUrl,
+    supabaseAnonKey: preferences.supabaseAnonKey?.trim() || defaultSupabaseAnonKey,
     supabaseBucket: preferences.supabaseBucket?.trim() || "wojaks",
   };
 }
@@ -116,14 +120,33 @@ function getCachePayload(rawValue?: string | null) {
 }
 
 function mapRemoteWojak(item: any): Wojak {
+  const fullUrl = item.full_url || item.fullUrl || "";
+  const thumbUrl = item.thumb_url || item.thumbUrl || buildThumbnailUrl(fullUrl);
   return {
     id: item.id,
     name: item.name,
     category: item.category,
     filename: item.filename,
-    thumbUrl: item.thumb_url,
-    fullUrl: item.full_url,
+    thumbUrl,
+    fullUrl,
   };
+}
+
+function buildThumbnailUrl(fullUrl?: string) {
+  if (!fullUrl) {
+    return "";
+  }
+
+  const marker = "/storage/v1/object/public/";
+  const markerIndex = fullUrl.indexOf(marker);
+
+  if (markerIndex === -1) {
+    return fullUrl;
+  }
+
+  const prefix = fullUrl.slice(0, markerIndex);
+  const objectPath = fullUrl.slice(markerIndex + marker.length);
+  return `${prefix}/storage/v1/render/image/public/${objectPath}?width=320&height=320&resize=contain&quality=80`;
 }
 
 async function fetchWojaksFromSupabase() {
@@ -141,12 +164,12 @@ async function fetchWojaksFromSupabase() {
   }
 
   const data = await response.json();
-  return data.map(mapRemoteWojak);
+  return data.map(mapRemoteWojak).filter((item: Wojak) => item.id && item.name && item.filename && item.fullUrl);
 }
 
 async function loadWojaks() {
   const cachedValue = getCachePayload(await LocalStorage.getItem<string>(metadataCacheKey));
-  const cachedData = cachedValue?.data?.map?.(mapRemoteWojak) ?? [];
+  const cachedData = cachedValue?.data?.map?.(mapRemoteWojak).filter((item: Wojak) => item.id && item.fullUrl) ?? [];
   const isFresh = cachedValue?.expiresAt && Number(cachedValue.expiresAt) > Date.now();
 
   if (isFresh && cachedData.length > 0) {
@@ -271,16 +294,33 @@ export default function Command() {
 
     const cacheKey = `${selectedCategory}::${normalizedQuery}`;
     const cachedResults = getCachedSearchResults(cacheKey, wojaksById);
-    if (cachedResults) {
+    if (cachedResults !== undefined && cachedResults.length > 0) {
       return cachedResults;
     }
 
-    const results = getFuse(selectedCategory)
+    const categoryResults = getFuse(selectedCategory)
       .search(normalizedQuery)
       .map((result) => result.item);
 
-    resultCache.set(cacheKey, JSON.stringify(results.map((wojak) => wojak.id)));
-    return results;
+    if (categoryResults.length > 0 || selectedCategory === allCategoriesLabel) {
+      resultCache.set(cacheKey, JSON.stringify(categoryResults.map((wojak) => wojak.id)));
+      return categoryResults;
+    }
+
+    const fallbackCacheKey = `${allCategoriesLabel}::${normalizedQuery}`;
+    const fallbackCachedResults = getCachedSearchResults(fallbackCacheKey, wojaksById);
+    if (fallbackCachedResults !== undefined && fallbackCachedResults.length > 0) {
+      resultCache.set(cacheKey, JSON.stringify(fallbackCachedResults.map((wojak) => wojak.id)));
+      return fallbackCachedResults;
+    }
+
+    const fallbackResults = getFuse(allCategoriesLabel)
+      .search(normalizedQuery)
+      .map((result) => result.item);
+
+    resultCache.set(fallbackCacheKey, JSON.stringify(fallbackResults.map((wojak) => wojak.id)));
+    resultCache.set(cacheKey, JSON.stringify(fallbackResults.map((wojak) => wojak.id)));
+    return fallbackResults;
   }, [debouncedSearchText, selectedCategory]);
 
   const visibleWojaks = useMemo(() => {

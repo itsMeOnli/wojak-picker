@@ -14,14 +14,16 @@
       "required": false,
       "title": "Supabase URL",
       "description": "Project URL, for example https://your-project.supabase.co",
-      "placeholder": "https://your-project.supabase.co"
+      "placeholder": "https://your-project.supabase.co",
+      "default": "https://ernvizpfdljlbkjshggj.supabase.co"
     },
     {
       "name": "supabaseAnonKey",
       "type": "password",
       "required": false,
       "title": "Supabase Anon Key",
-      "description": "Public anon key used by the Raycast extension"
+      "description": "Public anon key used by the Raycast extension",
+      "default": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybnZpenBmZGxqbGJranNoZ2dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NjA2NzAsImV4cCI6MjA5MTIzNjY3MH0.zklBHj_lsHVgxPzcKfyYzYrw9aLEPrf8kqnHJWvcuMk"
     },
     {
       "name": "supabaseBucket",
