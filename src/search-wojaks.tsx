@@ -246,15 +246,13 @@ export default function Command() {
   const [isLoadingRemoteData, setIsLoadingRemoteData] = useState(true);
   const [remoteError, setRemoteError] = useState<string | null>(null);
   const [wojaks, setWojaks] = useState<Wojak[]>([]);
-  const {
-    value: storedCategory,
-    setValue: setStoredCategory,
-    isLoading: isCategoryLoading,
-  } = useStoredCategory();
+  const { value: storedCategory, setValue: setStoredCategory, isLoading: isCategoryLoading } = useStoredCategory();
 
   const isConfigured = Boolean(preferences.baseUrl);
   const { categories, categoryPools, getFuse, wojaksById } = useMemo(() => createSearchHelpers(wojaks), [wojaks]);
-  const selectedCategory = categories.includes(storedCategory ?? "") ? storedCategory ?? allCategoriesLabel : allCategoriesLabel;
+  const selectedCategory = categories.includes(storedCategory ?? "")
+    ? (storedCategory ?? allCategoriesLabel)
+    : allCategoriesLabel;
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -423,11 +421,7 @@ export default function Command() {
             keywords={[wojak.name, wojak.category, wojak.filename]}
             actions={
               <ActionPanel>
-                <Action
-                  title="Copy Image to Clipboard"
-                  icon={Icon.Clipboard}
-                  onAction={() => handleCopy(wojak)}
-                />
+                <Action title="Copy Image to Clipboard" icon={Icon.Clipboard} onAction={() => handleCopy(wojak)} />
                 <Action.CopyToClipboard
                   title="Copy Source URL"
                   content={wojak.fullUrl}

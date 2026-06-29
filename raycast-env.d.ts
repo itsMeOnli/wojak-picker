@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Library Base URL - Public URL where your self-hosted Wojak library is served, for example https://wojaks.example.com */
+  /** Library Base URL - Where Wojak images are served from. Defaults to the public jsDelivr CDN. Override to point at your own host (e.g. https://wojaks.example.com). */
   "baseUrl": string
 }
 
