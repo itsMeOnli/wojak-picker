@@ -8,12 +8,8 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Supabase URL - Project URL, for example https://your-project.supabase.co */
-  "supabaseUrl"?: string,
-  /** Supabase Anon Key - Public anon key used by the Raycast extension */
-  "supabaseAnonKey"?: string,
-  /** Supabase Bucket - Storage bucket name for Wojak images */
-  "supabaseBucket": string
+  /** Library Base URL - Public URL where your self-hosted Wojak library is served, for example https://wojaks.example.com */
+  "baseUrl": string
 }
 
 /** Preferences accessible in all the extension's commands */

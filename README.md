@@ -9,7 +9,7 @@ Browse, search, and copy Wojaks straight into any chat from Raycast.
 - Fast grid browsing with lazy loading
 - Fuzzy search across thousands of Wojaks
 - One-key copy to clipboard for chats and messages
-- Supabase-backed image hosting so it works on any machine
+- Self-hosted static image hosting (any VPS + Nginx) so it works on any machine
 - Local metadata and image caching for smoother repeat use
 
 ![Search Grid](./media/search-grid.png)
@@ -24,10 +24,23 @@ Open Raycast and run `Search Wojaks`.
 - Use `Cmd+O` to open the source image in the browser
 - Use `Cmd+Shift+C` to copy the source image URL
 
+## Self-hosting the image library
+
+The extension is a thin client over a folder of static files served by your own web
+server. See [`deploy/README.md`](./deploy/README.md) for the full setup, but the short
+version:
+
+1. `WOJAK_BASE_URL=https://wojaks.example.com npm run build:deploy` — generates 320px
+   thumbnails and a `wojaks.json` manifest into `deploy/dist/`.
+2. `VPS_HOST=user@your-vps npm run deploy` — rsyncs `deploy/dist/` to `/var/www/wojaks`.
+3. Point Nginx at that folder using [`deploy/nginx-wojaks.conf`](./deploy/nginx-wojaks.conf).
+4. Set `Library Base URL` in the extension preferences to your domain.
+
 ## Development Notes
 
-- Configure `Supabase URL` and `Supabase Anon Key` in the extension preferences before first use.
-- The extension reads from your configured Supabase project and bucket.
+- Configure `Library Base URL` in the extension preferences before first use.
+- The extension fetches `<baseUrl>/wojaks.json` and loads images from `<baseUrl>/thumbs`
+  and `<baseUrl>/images`.
 - Search metadata is cached for 24 hours in Raycast LocalStorage.
 - Copied images are cached locally in Raycast support storage after first download.
-- Project maintenance scripts like scraping and Supabase migration are for repository maintenance only.
+- Project maintenance scripts like scraping are for repository maintenance only.

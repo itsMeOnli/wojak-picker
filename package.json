@@ -9,27 +9,12 @@
   "license": "MIT",
   "preferences": [
     {
-      "name": "supabaseUrl",
+      "name": "baseUrl",
       "type": "textfield",
       "required": false,
-      "title": "Supabase URL",
-      "description": "Project URL, for example https://your-project.supabase.co",
-      "placeholder": "https://your-project.supabase.co"
-    },
-    {
-      "name": "supabaseAnonKey",
-      "type": "password",
-      "required": false,
-      "title": "Supabase Anon Key",
-      "description": "Public anon key used by the Raycast extension"
-    },
-    {
-      "name": "supabaseBucket",
-      "type": "textfield",
-      "required": false,
-      "title": "Supabase Bucket",
-      "description": "Storage bucket name for Wojak images",
-      "default": "wojaks"
+      "title": "Library Base URL",
+      "description": "Where Wojak images are served from. Defaults to the public jsDelivr CDN. Override to point at your own host (e.g. https://wojaks.example.com).",
+      "default": "https://cdn.jsdelivr.net/gh/itsMeOnli/wojak-assets@main"
     }
   ],
   "commands": [
@@ -54,7 +39,8 @@
     "dev": "ray develop",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
-    "migrate:supabase": "node scripts/migrate-to-supabase.js",
+    "build:deploy": "node scripts/build-deploy.js",
+    "deploy": "bash scripts/deploy-vps.sh",
     "publish": "ray publish",
     "scrape": "node scrape/scrape.js"
   }

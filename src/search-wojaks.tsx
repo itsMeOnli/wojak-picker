@@ -33,7 +33,7 @@ const pageSize = 100;
 const searchDebounceMs = 150;
 const resultCache = new Cache({ namespace: "search-wojaks" });
 const metadataTtlMs = 24 * 60 * 60 * 1000;
-const metadataCacheKey = "wojak-picker.supabase-metadata.v1";
+const metadataCacheKey = "wojak-picker.library-metadata.v1";
 const imageCacheDirectory = join(environment.supportPath, "image-cache");
 
 function createFuse(items: Wojak[]) {
@@ -96,9 +96,7 @@ function getConfiguredPreferences() {
   const preferences = getPreferenceValues<Preferences.SearchWojaks>();
 
   return {
-    supabaseUrl: preferences.supabaseUrl?.trim().replace(/\/$/, "") || "",
-    supabaseAnonKey: preferences.supabaseAnonKey?.trim() || "",
-    supabaseBucket: preferences.supabaseBucket?.trim() || "wojaks",
+    baseUrl: preferences.baseUrl?.trim().replace(/\/$/, "") || "",
   };
 }
 
@@ -129,7 +127,7 @@ type RemoteWojak = {
 
 function mapRemoteWojak(item: RemoteWojak): Wojak {
   const fullUrl = item.full_url || item.fullUrl || "";
-  const thumbUrl = item.thumb_url || item.thumbUrl || buildThumbnailUrl(fullUrl);
+  const thumbUrl = item.thumb_url || item.thumbUrl || fullUrl;
   return {
     id: item.id || "",
     name: item.name || "",
@@ -141,38 +139,17 @@ function mapRemoteWojak(item: RemoteWojak): Wojak {
   };
 }
 
-function buildThumbnailUrl(fullUrl?: string) {
-  if (!fullUrl) {
-    return "";
-  }
+async function fetchWojaksFromLibrary() {
+  const { baseUrl } = getConfiguredPreferences();
 
-  const marker = "/storage/v1/object/public/";
-  const markerIndex = fullUrl.indexOf(marker);
-
-  if (markerIndex === -1) {
-    return fullUrl;
-  }
-
-  const prefix = fullUrl.slice(0, markerIndex);
-  const objectPath = fullUrl.slice(markerIndex + marker.length);
-  return `${prefix}/storage/v1/render/image/public/${objectPath}?width=320&height=320&resize=contain&quality=80`;
-}
-
-async function fetchWojaksFromSupabase() {
-  const { supabaseUrl, supabaseAnonKey } = getConfiguredPreferences();
-
-  const response = await fetch(
-    `${supabaseUrl}/rest/v1/wojaks?select=id,name,category,filename,thumb_url,full_url,source_page_url&order=name.asc`,
-    {
+  const response = await fetch(`${baseUrl}/wojaks.json`, {
     headers: {
-      apikey: supabaseAnonKey,
-      Authorization: `Bearer ${supabaseAnonKey}`,
+      Accept: "application/json",
     },
-    },
-  );
+  });
 
   if (!response.ok) {
-    throw new Error(`Supabase metadata fetch failed with HTTP ${response.status}`);
+    throw new Error(`Library metadata fetch failed with HTTP ${response.status}`);
   }
 
   const data = (await response.json()) as RemoteWojak[];
@@ -223,7 +200,7 @@ async function loadWojaks() {
   }
 
   try {
-    const remoteData = await fetchWojaksFromSupabase();
+    const remoteData = await fetchWojaksFromLibrary();
     await LocalStorage.setItem(
       metadataCacheKey,
       JSON.stringify({
@@ -275,7 +252,7 @@ export default function Command() {
     isLoading: isCategoryLoading,
   } = useStoredCategory();
 
-  const isConfigured = Boolean(preferences.supabaseUrl && preferences.supabaseAnonKey);
+  const isConfigured = Boolean(preferences.baseUrl);
   const { categories, categoryPools, getFuse, wojaksById } = useMemo(() => createSearchHelpers(wojaks), [wojaks]);
   const selectedCategory = categories.includes(storedCategory ?? "") ? storedCategory ?? allCategoriesLabel : allCategoriesLabel;
 
@@ -296,7 +273,7 @@ export default function Command() {
 
     async function run() {
       if (!isConfigured) {
-        setRemoteError("Set your Supabase preferences in Raycast to load the Wojak library.");
+        setRemoteError("Set the library base URL in Raycast preferences to load the Wojak library.");
         setWojaks([]);
         setIsLoadingRemoteData(false);
         return;
@@ -328,7 +305,7 @@ export default function Command() {
     return () => {
       cancelled = true;
     };
-  }, [isConfigured, preferences.supabaseUrl, preferences.supabaseAnonKey, preferences.supabaseBucket]);
+  }, [isConfigured, preferences.baseUrl]);
 
   const filteredWojaks = useMemo(() => {
     const pool = categoryPools.get(selectedCategory) ?? wojaks;
@@ -424,8 +401,8 @@ export default function Command() {
       {!isConfigured ? (
         <Grid.EmptyView
           icon={Icon.Gear}
-          title="Supabase setup required"
-          description="Set Supabase URL and anon key in this extension's preferences."
+          title="Setup required"
+          description="Set the library base URL in this extension's preferences (e.g. https://wojaks.example.com)."
         />
       ) : remoteError && visibleWojaks.length === 0 ? (
         <Grid.EmptyView icon={Icon.ExclamationMark} title="Couldn't load wojaks" description={remoteError} />
