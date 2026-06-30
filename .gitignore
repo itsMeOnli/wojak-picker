@@ -27,3 +27,5 @@ coverage/
 
 # downloaded image files from npm run scrape (manifest is committed)
 /assets/wojaks/
+
+assets/wojaks.json
